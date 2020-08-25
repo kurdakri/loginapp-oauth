@@ -13,12 +13,16 @@ import org.springframework.stereotype.Component;
 import com.example.loginapp.libraryentities.datasourceusers.Users;
 import com.example.loginapp.oauth.service.IUsersService;
 
+import brave.Tracer;
 import feign.FeignException;
 
 @Component
 public class AuthenticationSuccessErrorHandler implements AuthenticationEventPublisher {
 	
 	private Logger log = LoggerFactory.getLogger(AuthenticationSuccessErrorHandler.class);
+	
+	@Autowired
+	private Tracer tracer;
 	
 	@Value("${config.security.oauth.client.id}")
 	private String clientUser;
@@ -46,7 +50,7 @@ public class AuthenticationSuccessErrorHandler implements AuthenticationEventPub
 	@Override
 	public void publishAuthenticationFailure(AuthenticationException exception, Authentication authentication) {
 		String msg = String.format("Error en el login: %s", exception.getMessage());
-		log.error(msg);
+		tracer.currentSpan().tag("error.message", exception.getMessage());
 		try {
 			StringBuilder errors = new StringBuilder();
 			errors.append(msg);
